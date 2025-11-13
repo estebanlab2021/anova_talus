@@ -1,5 +1,5 @@
 # ANALISIS ANOVA DE UNA VIA
-Trabajo de ANOVA para el curso Métodos Estadísticos I,  sobre un informe estadístico con datos "reales" en R.
+Trabajo de ANOVA para el curso Métodos Estadísticos I,  sobre un informe estadístico con datos "reales" en R, para la Maestría en Estadística de la Universidad de Andes, Venezuela.
 
 Estos datos corresponden a una colección de huesos del pié que estudian la variabilidad de restos osteológicos de varios subgrupos poblaciones como España e Italia en varias líneas temporales que van desde el silo I al siglo XX. 
 
