@@ -1,0 +1,259 @@
+---
+title: "Métodos Estadísticos I"
+subtitle: "Evaluación 3: Anova - informe estadístico"
+author: "Integrantes: Esteban Luis Arroyo Barahona y Valerie del Valle González Guzmán"
+date: "10-11-2025"
+output: html_document
+---
+
+
+## Fuente de datos (referencia)
+
+Para este informe se usaron datos de un estudio pertenecientes a un proyecto del Prof. Eduardo Saldías del Departamento de Antropología de la Universidad de Chile. Estos datos forman parte de una colección de huesos del pié que estudian la variabilidad de restos osteológicos de varios subgrupos poblaciones como España e Italia en varias líneas temporales que van desde el siglo I al siglo XX. 
+
+Más detalles de estos estudios se pueden encontrar en:
+
+* Saldías, E., Isidro, A., Martínez‐Labarga, C., Coppa, A., Rubini, M., Vila, B., & Malgosa, A. (2022). Pathological and normal variability of foot bones in osteological collections from Catalonia (Spain) and Lazio (Italy). International Journal of Osteoarchaeology, 32(1), 215-228.
+
+* Saldías E, Malgosa A, Jordana X, Martínez-Labarga C, Coppa A, Rubini M, Vila B, Isidro A. A new methodology to estimate flat foot in skeletal remains - the example of Mediterranean collections. Homo. 2021 Dec 21;72(4):281-292.
+
+
+## Planteamiento del Problema
+
+El hueso del talus, también conocido como astrágalo, es un hueso del tarso en la parte superior del pie que articula con la tibia y el peroné por arriba, y con el calcáneo y el escafoides por debajo. Es fundamental para transmitir el peso del cuerpo de la pierna al pie, permitir la movilidad del tobillo y actuar como un soporte estable. 
+
+Estos huesos corresponden a una colección de restos osteológicos del mediterráneo y se desea comparar la variabilidad en tres grupos específicos: España de los siglos II al IX, España de los siglos X al XX e Italia de los siglos II al IX y siglos X al XX sobre el hueso del talus. Cabe destacar que parte de su importancia es comprender la salud, la locomoción, la nutrición y las adaptaciones físicas de poblaciones antíguas, ya que este hueso es clave para el movimiento y la estabilidad del tobillo y el pie. Así mismo, su anatomía y relación con otros huesos del pié pueden ofrecer pistas sobre la ascendencia y otras características biológicas de las poblaciones pasadas.
+
+Para este análisis se cuantan con los huesos del talus de 192 de restos óseos y seleccionaron específicamente las variables: Sexo (Masculino, Femenino), Temporalidad (España s.II-IX, España s.X-XX e Italia para los respectivos períodos) y Talus_LHEAD, que es la medida de longitud de la cabeza del hueso Talus en milímetros. Vale destacar, que para el país Italia se agruparon los períodos, ya que en primera instancia el tamaño de muestra para cada uno era muy bajo y también porque se tiene información a priori que este hueso en este país no presencia diferencias en estudios anteriores.
+
+
+<div style="display: flex; justify-content: space-around;">
+  <div style="width: 48%; text-align: center;"><img src="talus.jpg" alt="Descripción de Imagen 1" style="width: 100%;"></div>
+  <div style="width: 48%; text-align: center;"><img src="talus3.png" alt="Descripción de Imagen 2" style="width: 100%;"></div>
+</div>
+
+
+### Planteamiento del contraste de hipótesis 
+
+$H_0: \mu_{1}=\mu_{2}=\mu_{3}$
+
+$H_1: \mu_{j}\neq\mu_{r}$ para algún j,r
+
+## Análisis
+
+Cargamos las librería a usar:
+
+```{r, message = FALSE, warning = FALSE, comment=""}
+library(readxl)     # Para leer fichero de Excel
+library(dplyr)      # Para manipulación de datos
+library(car)        # Para usar varias funcionalidades de análisis de datos como leveneTest() y qqPlot()
+library(kableExtra) # Para realización de tablas más vistosas
+library(expss)      # Para usar funciones de tablas cruzadas como cross_cases()
+library(ggplot2)    # Para realización de Gráficos
+library(psych)      # Para usar la función describeBy()
+```
+
+Cargamos los datos desde Excel
+
+```{r, message = FALSE, warning = FALSE, comment=""}
+datos <- read_excel("base.xlsx")
+```
+
+Factorizamos las variables categóricas y verificamos su estructura:
+
+```{r, message = FALSE, warning = FALSE, comment=""}
+datos$Sexo <- factor(datos$Sexo)
+datos$Temporalidad <- factor(datos$Temporalidad)
+
+str(datos)
+```
+
+
+:::: {style="display: flex;"}
+
+::: {}
+
+Visualizamos las 15 primeras filas de la base:
+
+```{r, message = FALSE, warning = FALSE, comment=""}
+
+head(datos, 15) %>% kbl() %>% kable_classic_2(full_width = F, position = "center")
+```
+
+
+:::
+
+::: {}
+
+Visualizamos las 15 últimas filas de la base:
+
+```{r, message = FALSE, warning = FALSE, comment=""}
+
+tail(datos, 15) %>% kbl() %>% kable_classic_2(full_width = F, position = "center")
+```
+
+:::
+
+::::
+
+### Estadística Descriptiva
+
+Realizamos una tabla cruzada de Temporalidades x Sexo para observar las fecuencias de las variables categóricas
+
+```{r, message = FALSE, warning = FALSE, comment=""}
+cross_cases(data=datos, cell_vars=list(Temporalidad), col_vars=list(Sexo, total())) %>% kbl() %>% kable_classic_2(full_width = F, position = "center")
+```
+
+
+Realizamos una estadística descriptiva de la variable Talus_LHEAD según el sexo
+
+```{r, message = FALSE, warning = FALSE, comment=""}
+
+describeBy(Talus_LHEAD~Sexo, data=datos, mat=TRUE) %>% kbl() %>% kable_classic_2(full_width = F, position = "center")
+```
+
+
+Realizamos una estadística descriptiva de la variable Talus_LHEAD según la temporalidad
+
+```{r, message = FALSE, warning = FALSE, comment=""}
+
+describeBy(Talus_LHEAD~Temporalidad, data=datos, mat=TRUE) %>% kbl() %>% kable_classic_2(full_width = F, position = "center")
+```
+
+
+
+
+### Verificamos Normalidad y homocedasticidad de la variable **Talus_LHEAD** según la **Temporalidad**
+
+```{r, message = FALSE, warning = FALSE, comment=""}
+
+leveneTest(unlist(datos[, 3])~ unlist(datos[, 2]))
+by(unlist(datos[,3]), unlist(datos[, 2]), shapiro.test)
+```
+
+Observamos que la cada uno de subgrupos temporales se ajustan a la normal y también se cumple el supuesto de homogeneidad de varianza, ya que todos lo p-valores son superiores a $\alpha=0.05$, por tanto, no se puede rechazar las hipótesis nula respectivas.
+
+
+### Aplicamos el modelo ANOVA de una vía
+
+```{r, message = FALSE, warning = FALSE, comment=""}
+#Usamos la función attach, para acceder fácilmente a las columnas de la base
+attach(datos)
+
+# ejecutando el ANOVA
+anova_talus<-aov(Talus_LHEAD~Temporalidad)
+summary(anova_talus) 
+```
+
+Observamos que el tratamiento **Temporalidad** posee un p-valor = 0.00387, el cual es muy infererior a un $\alpha=0.05$, esto hace referencia y podemos afirmar que la temporalidad es significativa y que por lo menos uno de los promedios del los tratamientos es diferente del resto.
+
+Para observar mejor las diferencia en los tratamientos, realizamos un gráfico de boxplot
+
+```{r, message = FALSE, warning = FALSE, comment=""}
+ggplot(data=datos, aes(x=Temporalidad, y=Talus_LHEAD, fill=Temporalidad)) + geom_boxplot(outlier.colour = "red") +
+  ggtitle("Gráfico de Boxplot de hueso Talus x Termporalidad") + stat_boxplot(geom = "errorbar", width = 0.25) + theme_bw() + 
+  theme(legend.position = "none") + stat_summary(fun=mean,geom="point",shape=18,size=3,color="black")
+```
+
+El gráfico muestra una distribución bastante similar en las temporalidades de España s.II-IX e Italia, mientras que la temporalidad de España s.X-XX, parece ser la más diferente de las tres, con menores valores de promedio y mediana.
+
+
+De forma puntual podemos comprarar los promedios del Talus para cada período temporal
+
+```{r, message = FALSE, warning = FALSE, comment=""}
+
+model.tables(anova_talus,"means")
+
+```
+
+Se aprecia que el promedio de España s.X-XX posee un valor de 30.38 milímetros, siendo este el más bajo de los tres y el más diferente.
+
+
+Para estimar los efectos (diferencia de grupo y el total)
+
+```{r, message = FALSE, warning = FALSE, comment=""}
+model.tables(anova_talus,"effects")
+
+```
+
+Se puede observar la magnitud y dirección de la diferencia de cada tratamiento (temporalidad) con respecto al promedio general. En general, vemos que España s.II-IX e Italia poseen valores positivos, indicando que la longitud promedio del Talus de sus respectivos grupos es mayor que la media general. Por su parte, España s.X-XX, presenta un valor negativo, que indica que su promedio en menor a la media global, con una magnitud bastante mayor (-1.325). 
+
+Esto nos indica que Italia y España s.II-IX tienden a tener la cabeza del Talus un poco más larga que el promedio de la muestra total, mientras que los individuos de España s.X-XX, tienden a tener la cabeza del Talus más corta que el promedio de la muestra total.
+
+
+### Comprobación de los supuestos del modelo
+
+Para verificar el supuesto de normalidad de los residuos del modelo, vamos a realizar dos verificaciones: 1) gráfica por medio del qq-plot y 2) por medio del test de Shapiro-Wilk
+
+1- Grafico para los residuos
+
+```{r, message = FALSE, warning = FALSE, comment=""}
+qqPlot(residuals(anova_talus)) 
+```
+
+El gráfico muestra una distribución de los residuos bastante buena y equilibrada a lo largo de la línea de estimación, sin embargo, se aprecia que hay dos puntos el 93 y 58 que parecen estar en el límite de la amplitud aceptable de normalidad.
+
+
+2- Test de Shapiro-Wilk
+
+```{r, message = FALSE, warning = FALSE, comment=""}
+
+shapiro.test(residuals(anova_talus))
+```
+
+
+Observamos que el test arroja un p-valor de 0.178 que es superior al $\alpha=0.05$. Por lo que no tenemos elementos suficientes para rechazar la hipótesis nula de normalidad de los residuos, es decir, los residuos se estarían ajustando a la normalidad, pese que el gráfico qq-plot se aprecia que hay dos valores (el 93 y 58) que parecen estar en el límite de la amplitud aceptable de normalidad. 
+
+
+El supuesto de homogeneidad de varianza, ya lo realizamos previamente con el test de Levene, cuyo p-valor es de 0.5079, encontrando que era mayor a $\alpha=0.05$, por lo tanto, concluimos que no hay elementos suficientes para rechazar la hipótesis nula de homogeneidad de varianza.
+
+
+### Realización de pruebas post hoc, para determinar dónde están las diferencias significativas
+
+Como nos intereza comprar los promedios entre sí, haciendo todas las comparaciones posibles de 2 en 2, aplicamos el test de Tukey
+
+
+```{r, message = FALSE, warning = FALSE, comment=""}
+
+TukeyHSD(anova_talus)
+
+```
+
+La tabla muestra las diferencias de las medias de la longitud de la cabeza del Talus entre los tres grupos temporales. Nos enfocaremos en la columna "p adj" que representa los p-valores y para considerarlos significativos o no, utilizaremos el $\alpha=0.05$ como umbral de significancia.
+
+Observamos que entre los dos períodos considerados (España s.II-IX y España s.X-XX) de España, el p-valor es de 0.0088680 y como es menor al umbral de referencia, concluimos que hay diferencias significativas.
+
+También se observa que entre Italia y España s.X-XX, el p-valor es igualmente menor que el umbral de referencia de 0.0047331, indicando que hay diferencias significativas. Por su parte, la comparación entre Italia y España s.II-IX, da un p-valor de 0.9595876 siendo este mucho mayor al nivel asignado $\alpha=0.05$. Por lo que se puede concluir que no existen diferencias significativas entre estos dos grupos temporales.
+
+
+## CONCLUSIÓN GENERAL
+
+* La prueba ANOVA confirma que existe variabilidad en la longitud de la cabeza del Talus entre los tres grupos temporales considerados. En otras palabras, que los tratamientos (Temporalidad) influye en la variabilidad de la longitud de la cabeza del Talus.
+
+* La prueba de Tukey, confirma que la variabilidad significativa se debe principalmente a las diferencias con el grupo España s.X-XX. Esto porque tiene una longitud promedio de la cabeza del Talus significativamente menor que los otros dos grupos (España s.II-IX e Italia).
+
+* Los grupos España s.II-IX e Italia no difieren significativamente entre sí en la longitud promedio de la cabeza del Talus. Lo que podría indicar que los individuos de Italia, aunque con mayor rango de temporalidad, tienden a ser más parecidos en promedio a la España de los siglos II-IX.
+
+
+Solo a modo de visualizar de manera independiente el factor sexo, nos abocamos a la exploración de los supuestos para concocer incialmente sus comportamiento y la vercidad de estos para aplicar el ANOVA
+
+## Análisis de una vía con el sexo planteando de manera independiente para determinar la diferencia del tamaño del Talus_LHEAD
+
+### Verificamos Normalidad y homocedasticidad de la variable **Talus_LHEAD** según la **Sexo**
+
+```{r, message = FALSE, warning = FALSE, comment=""}
+
+leveneTest(unlist(datos[, 3])~ unlist(datos[, 1]))
+by(unlist(datos[,3]), unlist(datos[, 1]), shapiro.test)
+```
+
+De acuerdo a los resultados obtenidos con la prueba robusta de Levene, visualizamos que según el sexo masculinos no se ajusta en la comprobación para la distribución normal y respecto al grupo femenino, aunque casi es la misma probabilidad para un $\alpha=0.05$ siendo este 0.05191 la violación del supuesto de normalidad es leve y aunque el tamaño de la muestra es lo suficientemente grande (mayor a 30) y bajo el teorema central del límite se asegura que la distribución de las media muestral se aproximará a la normalidad, sin embargo en estos casos se hubiese recomendado trabajar de manera cautelosa con este resultado en particular
+
+Sin embargo,  se cumple el supuesto de homogeneidad de varianza en los grupos, ya que el p-valor es superior a $\alpha=0.05$ indicando que no tenemos suficiente evidencias para rechazar la hipóstesis nula.
+
+Por tanto, ya que los resultados en cuanto a la no normalidad para los masculinos no se cumple, se debería intentar verificar alguna transformación para tal fin y correr nuevamente la prueba con el fin de visualizar si se cumple el supuesto. 
+
+En el caso de que se cumpla mediante la trasnformación, siempre se recomienda realizar el análisis de dos vías de manera simultánea, el cual para efecto de este ejercicio no se aplicará por el incumplimiento del supuesto de normalidad y también por la desigualdad de los tamaños de muestras entre grupos según el sexo, lo cual conlleva otra metodología en la comprobación y análisis para el ANOVA.
+
+
+### FIN
