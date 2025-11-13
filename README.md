@@ -7,4 +7,4 @@ Para este análisis se cuentan con los huesos del talus de 192 de restos óseos 
 
 La metodología y desarrollo de este ejercicio se encuentra en el siguiente link: https://estebanlab2021.github.io/anova_talus/
 
-Los datos se pueden obtener en formato csv de este link:
+Los datos se pueden obtener en formato csv de este link: https://github.com/estebanlab2021/anova_talus/blob/master/base_huesos.csv
