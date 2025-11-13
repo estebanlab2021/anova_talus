@@ -10,4 +10,4 @@ La metodología y desarrollo de este ejercicio se encuentra en el siguiente link
 Los datos se pueden obtener en formato csv de este link: https://github.com/estebanlab2021/anova_talus/blob/master/base_huesos.csv
 
 
-## Este trabajo se realizó por Esteban Luis Arroyo Barahona y Valerie del Valle González Guzmán
+## Este trabajo está realizado por Esteban Luis Arroyo Barahona y Valerie del Valle González Guzmán
