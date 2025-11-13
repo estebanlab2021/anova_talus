@@ -5,6 +5,6 @@ Estos datos corresponden a una colección de huesos del pié que estudian la var
 
 Para este análisis se cuentan con los huesos del talus de 192 de restos óseos y se seleccionaron específicamente las variables: Sexo (Masculino, Femenino), Temporalidad (España s.II-IX, España s.X-XX, Italia) y Talus_LHEAD, que es la medida de longitud de la cabeza del hueso Talus en milímetros.
 
-La metodología y desarrollo de este ejercicio se encuentra en el siguiente link:
+La metodología y desarrollo de este ejercicio se encuentra en el siguiente link: https://estebanlab2021.github.io/anova_talus/
 
 Los datos se pueden obtener en formato csv de este link:
